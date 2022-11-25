@@ -7,7 +7,7 @@
  
  Scienze Statistiche - Economia e Impresa
  
- R Shiny app for studying you saved tracks on spotify
+ R Shiny app for studying your saved tracks on Spotify
 
 
   
