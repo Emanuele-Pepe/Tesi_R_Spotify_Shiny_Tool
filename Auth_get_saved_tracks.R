@@ -17,8 +17,8 @@ library(janitor)
 library(archetypes)
 
 # API AUTHENTICATION AND AUTHORIZATION --------------------------
-Sys.setenv(SPOTIFY_CLIENT_ID = 'IL TUO CLIENT ID')
-Sys.setenv(SPOTIFY_CLIENT_SECRET = 'IL TUO CLIENT SECRET')
+Sys.setenv(SPOTIFY_CLIENT_ID = 'YOUR CLIENT ID')
+Sys.setenv(SPOTIFY_CLIENT_SECRET = 'YOUR CLIENT SECRET')
 
 access_token <- get_spotify_access_token()
 
@@ -65,14 +65,16 @@ dt_audio_features <- dt_audio_features[complete.cases(dt_audio_features[, ])]
 #skimr::skim_without_charts(dt_audio_features)
 
 dt_audio_features_red <- dt_audio_features[, .SD, .SDcols = c("id", "danceability", "energy", "key", "loudness", "mode", "speechiness", 
-                                                              "acousticness", "instrumentalness", "liveness", "valence", "tempo")]
+                                                              "acousticness", "instrumentalness", "liveness", "valence", "tempo",
+                                                              "duration_ms","time_signature" )]
 # table(duplicated(dt_audio_features_red$id))
-dt_tracks_red <- dt_tracks[, .SD, .SDcols = c( "track.artists", "track.duration_ms", "track.explicit", "track.id",
-                                               "track.name", "added_at", "track.popularity",  "track.album.id", 
+dt_tracks_red <- dt_tracks[, .SD, .SDcols = c( "added_at" , "track.artists", "track.explicit", "track.id",
+                                               "track.name", "track.popularity",  "track.album.id", 
                                                "track.album.name",  "track.album.release_date", "track.album.total_tracks" )]
 dt_tracks_red[, track.explicit := fifelse(track.id == TRUE, 1, 0)]
 dt_tracks_analysis <- merge(x = dt_audio_features_red, y = dt_tracks_red, by.x = "id", by.y = "track.id", all = T)
-num_col <- names(dt_tracks_analysis[,-c("track.name", "id", "track.explicit", "mode", "key", "track.artists" )])
+
+# num_col <- names(dt_tracks_analysis[,-c("track.name", "id", "track.explicit", "mode", "key", "track.artists" )])
 
 
 artist_list <- list()
@@ -120,6 +122,7 @@ dt_artist_genre[, genres := lapply(dt_artist_genre$genres, unlist)]
 dt_artist_genre[, main_genre := mapply('[', genres,1,SIMPLIFY = TRUE)] 
 kc_genres <- c("id" , "name", "popularity", "followers.total", "main_genre")
 dt_artist_genre_final <- dt_artist_genre[, .SD, .SDcols = kc_genres]
+dt_artist_genre_final <- dt_artist_genre_final[!is.na(id)]
 
 dt_tracks_analysis <- merge(dt_tracks_analysis, dt_artists, by = "id", all = T)
 dt_tracks_analysis <- merge(dt_tracks_analysis, dt_artist_genre_final, by.x = "track.artists.id", by.y = "id", all = T )
@@ -128,7 +131,7 @@ dt_tracks_analysis <- merge(dt_tracks_analysis, dt_artist_genre_final, by.x = "t
 setnames(dt_tracks_analysis, "id", "track.id")
 dt_tracks_analysis[, name := NULL]
 
-dt_tracks_analysis <- unnest(dt_tracks_analysis, "main_genre")
+# dt_tracks_analysis <- unnest(dt_tracks_analysis, "main_genre")
 
 setDT(dt_tracks_analysis)
 
@@ -249,6 +252,8 @@ fviz_cluster(prova_model, data = dt_tracks_analysis[, .SD, .SDcols = num_col],
              ellipse.type = "convex", 
              ggtheme = theme_bw()
 )
+
+
 
 
 
